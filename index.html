@@ -4,116 +4,204 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Countdown Timer</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
 
-  body {
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Roboto+Mono:wght@400;700&display=swap');
+
+/* BACKGROUND */
+body {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: linear-gradient(135deg, #74ebd5, #ACB6E5);
-    font-family: 'Roboto Mono', monospace;
     margin: 0;
-  }
+    background: linear-gradient(135deg, #ffdf6b, #ff9eb5, #79eaf2);
+    background-size: 300% 300%;
+    animation: bgMove 10s ease infinite;
+    font-family: 'Fredoka One', cursive;
+}
 
-  .timer-container {
-    background: rgba(255, 255, 255, 0.95);
-    padding: 50px 70px;
-    border-radius: 25px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+@keyframes bgMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* CARTOON TIMER BOX */
+.timer-container {
+    background: #fff;
+    padding: 40px 50px;
+    border-radius: 30px;
+    border: 5px solid #222;
+    box-shadow: 10px 10px 0px #222;
     text-align: center;
-    max-width: 500px;
     width: 90%;
-  }
+    max-width: 480px;
+}
 
-  h1 {
-    margin-bottom: 30px;
-    font-size: 2.2rem;
+/* TITLE */
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 25px;
     color: #333;
-  }
+    text-shadow: 2px 2px 0px #fff, 4px 4px 0px #222;
+}
 
-  .inputs {
+/* INPUT FIELDS */
+.inputs {
     display: flex;
     justify-content: center;
     gap: 15px;
     margin-bottom: 25px;
-  }
+}
 
-  .inputs input {
+.inputs input {
     width: 80px;
     padding: 15px;
-    border-radius: 12px;
-    border: 1px solid #ccc;
+    border-radius: 15px;
+    font-size: 18px;
     text-align: center;
-    font-size: 20px;
-  }
+    border: 4px solid #222;
+    background: #fffae3;
+    outline: none;
+    font-family: 'Fredoka One';
+}
 
-  button {
-    padding: 12px 30px;
-    border: none;
-    border-radius: 12px;
-    background-color: #4CAF50;
-    color: white;
+.inputs input::placeholder {
+    color: #888;
+}
+
+/* BUTTONS */
+button {
+    padding: 12px 25px;
+    border-radius: 15px;
+    border: 4px solid #222;
     font-size: 18px;
     cursor: pointer;
-    transition: 0.3s;
-  }
+    background: #ffce54;
+    margin: 5px;
+    transition: 0.2s;
+    font-family: 'Fredoka One';
+}
 
-  button:hover {
-    background-color: #45a049;
-  }
+button:hover {
+    transform: translateY(-4px);
+    box-shadow: 4px 4px 0px #222;
+}
 
-  .countdown {
+/* COUNTDOWN TEXT */
+.countdown {
     font-size: 60px;
     font-weight: bold;
-    margin-top: 30px;
     color: #333;
-  }
+    text-shadow: 4px 4px 0px #fff, 6px 6px 0px #222;
+    margin-top: 25px;
+}
+
+/* POPUP MODAL */
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.popup-content {
+    background: #fff;
+    padding: 40px 60px;
+    border-radius: 30px;
+    text-align: center;
+    border: 5px solid #222;
+    box-shadow: 12px 12px 0px #222;
+    animation: popIn 0.5s ease;
+}
+
+@keyframes popIn {
+    from { transform: scale(0.2); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.popup-content h2 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.popup-content button {
+    background: #79eaf2;
+}
 </style>
 </head>
+
 <body>
 
-<div class="timer-container">
-  <h1>Countdown Timer</h1>
-  <div class="inputs">
-    <input type="number" id="hours" placeholder="HOURS" min="0">
-    <input type="number" id="minutes" placeholder="MINUTES" min="0">
-    <input type="number" id="seconds" placeholder="SECONDS" min="0">
-  </div>
-  <button onclick="startTimer()">Start</button>
-  <div class="countdown" id="countdown">00:00:00</div>
+<!-- TIMER -->
+<div class="timer-container" id="timerContainer">
+    <h1>Countdown Timer</h1>
+
+    <div class="inputs">
+        <input type="number" id="hours" placeholder="HRS" min="0">
+        <input type="number" id="minutes" placeholder="MIN" min="0">
+        <input type="number" id="seconds" placeholder="SEC" min="0">
+    </div>
+
+    <button onclick="startTimer()">Start</button>
+    <button onclick="resetTimer()">Reset</button>
+
+    <div class="countdown" id="countdown">00:00:00</div>
+</div>
+
+<!-- POPUP WHEN DONE -->
+<div class="popup" id="popup">
+    <div class="popup-content">
+        <h2>Time’s Up!</h2>
+        <button onclick="closePopup()">OK</button>
+    </div>
 </div>
 
 <script>
 let countdownInterval;
+let totalSeconds = 0;
 
 function startTimer() {
-  clearInterval(countdownInterval);
+    clearInterval(countdownInterval);
 
-  let hours = parseInt(document.getElementById('hours').value) || 0;
-  let minutes = parseInt(document.getElementById('minutes').value) || 0;
-  let seconds = parseInt(document.getElementById('seconds').value) || 0;
+    let h = parseInt(document.getElementById('hours').value) || 0;
+    let m = parseInt(document.getElementById('minutes').value) || 0;
+    let s = parseInt(document.getElementById('seconds').value) || 0;
 
-  let totalSeconds = hours * 3600 + minutes * 60 + seconds;
+    totalSeconds = h * 3600 + m * 60 + s;
+    if (totalSeconds <= 0) return;
 
-  if(totalSeconds <= 0) return;
+    countdownInterval = setInterval(() => {
+        let hours = Math.floor(totalSeconds / 3600);
+        let minutes = Math.floor((totalSeconds % 3600) / 60);
+        let seconds = totalSeconds % 60;
 
-  countdownInterval = setInterval(() => {
-    let h = Math.floor(totalSeconds / 3600);
-    let m = Math.floor((totalSeconds % 3600) / 60);
-    let s = totalSeconds % 60;
+        document.getElementById("countdown").textContent =
+            `${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
 
-    document.getElementById('countdown').textContent =
-      `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        if (totalSeconds <= 0) {
+            clearInterval(countdownInterval);
+            document.getElementById("popup").style.display = "flex";
+        }
 
-    if(totalSeconds <= 0) {
-      clearInterval(countdownInterval);
-      alert("Time's up!");
-    }
+        totalSeconds--;
+    }, 1000);
+}
 
-    totalSeconds--;
-  }, 1000);
+function resetTimer() {
+    clearInterval(countdownInterval);
+    totalSeconds = 0;
+    document.getElementById("countdown").textContent = "00:00:00";
+}
+
+function closePopup() {
+    document.getElementById("popup").style.display = "none";
 }
 </script>
 
